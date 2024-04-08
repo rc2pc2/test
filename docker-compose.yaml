@@ -474,30 +474,30 @@ services:
       - homepage.widget.key=${HOMEASSISTANT_ACCESS_TOKEN}
     profiles:
       - homeassistant
-  homepage:
-    image: ghcr.io/gethomepage/homepage:latest
-    container_name: homepage
-    environment:
-      - HOMEPAGE_VAR_TITLE=${HOMEPAGE_VAR_TITLE}
-      - HOMEPAGE_VAR_SEARCH_PROVIDER=${HOMEPAGE_VAR_SEARCH_PROVIDER}
-      - HOMEPAGE_VAR_HEADER_STYLE=${HOMEPAGE_VAR_HEADER_STYLE}
-      - HOMEPAGE_VAR_WEATHER_CITY=${HOMEPAGE_VAR_WEATHER_CITY}
-      - HOMEPAGE_VAR_WEATHER_LAT=${HOMEPAGE_VAR_WEATHER_LAT}
-      - HOMEPAGE_VAR_WEATHER_LONG=${HOMEPAGE_VAR_WEATHER_LONG}
-      - HOMEPAGE_VAR_WEATHER_TIME=${TIMEZONE}
-      - HOMEPAGE_VAR_WEATHER_UNIT=${HOMEPAGE_VAR_WEATHER_UNIT}
-    volumes:
-      - ${CONFIG_ROOT:-.}/homepage:/app/config
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /robba
-    restart: always
-    command: [sh, -c, "cp -n /app/config/tpl/*.yaml /app/config && node server.js"]
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.homepage.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/`))
-      - traefik.http.routers.homepage.tls=true
-      - traefik.http.routers.homepage.tls.certresolver=myresolver
-      - traefik.http.services.homepage.loadbalancer.server.port=3000
+  # homepage:
+  #   image: ghcr.io/gethomepage/homepage:latest
+  #   container_name: homepage
+  #   environment:
+  #     - HOMEPAGE_VAR_TITLE=${HOMEPAGE_VAR_TITLE}
+  #     - HOMEPAGE_VAR_SEARCH_PROVIDER=${HOMEPAGE_VAR_SEARCH_PROVIDER}
+  #     - HOMEPAGE_VAR_HEADER_STYLE=${HOMEPAGE_VAR_HEADER_STYLE}
+  #     - HOMEPAGE_VAR_WEATHER_CITY=${HOMEPAGE_VAR_WEATHER_CITY}
+  #     - HOMEPAGE_VAR_WEATHER_LAT=${HOMEPAGE_VAR_WEATHER_LAT}
+  #     - HOMEPAGE_VAR_WEATHER_LONG=${HOMEPAGE_VAR_WEATHER_LONG}
+  #     - HOMEPAGE_VAR_WEATHER_TIME=${TIMEZONE}
+  #     - HOMEPAGE_VAR_WEATHER_UNIT=${HOMEPAGE_VAR_WEATHER_UNIT}
+  #   volumes:
+  #     - ${CONFIG_ROOT:-.}/homepage:/app/config
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - /robba
+  #   restart: always
+  #   command: [sh, -c, "cp -n /app/config/tpl/*.yaml /app/config && node server.js"]
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.homepage.rule=(Host(`${HOSTNAME}`) && PathPrefix(`/`))
+  #     - traefik.http.routers.homepage.tls=true
+  #     - traefik.http.routers.homepage.tls.certresolver=myresolver
+  #     - traefik.http.services.homepage.loadbalancer.server.port=3000
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
