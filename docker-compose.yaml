@@ -6,7 +6,6 @@ services:
     environment:
       - CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
-      - CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_ZONE_API_TOKEN}
       - LETS_ENCRYPT_EMAIL=${LETS_ENCRYPT_EMAIL}
     command:
       - --ping=true
@@ -48,7 +47,7 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${CONFIG_ROOT:-.}/sonarr:/config
-      - ${DATA_ROOT}:/data
+      - /robba
     restart: always
     healthcheck:
       test: [ "CMD", "curl", "--fail", "http://127.0.0.1:8989/sonarr/ping" ]
@@ -78,7 +77,7 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${CONFIG_ROOT:-.}/radarr:/config
-      - ${DATA_ROOT}:/data
+      - /robba
     restart: always
     healthcheck:
       test: [ "CMD", "curl", "--fail", "http://127.0.0.1:7878/radarr/ping" ]
@@ -108,7 +107,7 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${CONFIG_ROOT:-.}/lidarr:/config
-      - ${DATA_ROOT}:/data
+      - /robba
     restart: always
     healthcheck:
       test: [ "CMD", "curl", "--fail", "http://127.0.0.1:8686/lidarr/ping" ]
@@ -140,7 +139,7 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${CONFIG_ROOT:-.}/bazarr/config:/config
-      - ${DATA_ROOT}:/data
+      - /robba
     restart: always
     healthcheck:
       test: [ "CMD", "curl", "--fail", "http://127.0.0.1:6767/bazarr/ping" ]
@@ -383,7 +382,7 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${CONFIG_ROOT:-.}/sabnzbd:/config
-      - ${DATA_ROOT}:/data
+      - /robba
     restart: always
     labels:
       - traefik.enable=true
@@ -412,7 +411,7 @@ services:
       - JELLYFIN_PublishedServerUrl=${HOSTNAME}/jellyfin
     volumes:
       - ${CONFIG_ROOT:-.}/jellyfin:/config
-      - ${DATA_ROOT}:/data
+      - /robba
     ports:
       - "7359:7359/udp"
       - "1900:1900/udp"
@@ -489,7 +488,7 @@ services:
     volumes:
       - ${CONFIG_ROOT:-.}/homepage:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${DATA_ROOT}:/data
+      - /robba
     restart: always
     command: [sh, -c, "cp -n /app/config/tpl/*.yaml /app/config && node server.js"]
     labels:
