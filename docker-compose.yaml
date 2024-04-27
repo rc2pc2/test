@@ -27,6 +27,51 @@
 # Note that Sonarr and Radarr don't necessarily need the VPN if you're using Prowlarr for the indexers. 
 # But Prowlarr should be behind the VPN to avoid ISPs that block indexers.
 services:
+
+  wireguard:
+        image: lscr.io/linuxserver/wireguard:latest
+        container_name: wireguard
+        cap_add:
+            - NET_ADMIN
+            - SYS_MODULE #optional
+        privileged: true
+        tty: true
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=Etc/UTC
+            #- SERVERURL=wireguard.domain.com #optional
+            #- SERVERPORT=51820 #optional
+            #- PEERS=1 #optional
+            #- PEERDNS=auto #optional
+            #- INTERNAL_SUBNET=10.13.13.0 #optional
+            # - ALLOWEDIPS=0.0.0.0/0 #optional
+            #- PERSISTENTKEEPALIVE_PEERS= #optional
+            #- LOG_CONFS=true #optional
+        volumes:
+            - /home/devito/.config/wgi/:/config
+            #- /lib/modules:/lib/modules #optional
+        ports:
+            - 51820:51820/udp
+            # QBT UI Port
+            - 8090:8090
+            # Bittorrent port
+            - 6881:6881
+            - 6881:6881/udp
+            # Web port
+            - 8080:8080
+            - 9117:9117
+            # Sonarr port
+            - 8989:8989
+            # Radarr port
+            - 7878:7878
+            # Lidarr port
+            - 8686:8686
+            # Prowlarr port
+            - 9696:9696
+        sysctls:
+            - net.ipv4.conf.all.src_valid_mark=1
+        restart: unless-stopped
     qbittorrent:
         image: linuxserver/qbittorrent
         container_name: qbittorrent
@@ -43,7 +88,7 @@ services:
             - /data/video/FilmDownloads:/filmdownloads
             - /data/video/MusicDownloads:/musicdownloads
         restart: unless-stopped
-        network_mode: "host"
+        network_mode: service:wireguard
  
     prowlarr:
         image: linuxserver/prowlarr:develop
@@ -57,7 +102,7 @@ services:
         restart: unless-stopped
         depends_on:
             - qbittorrent
-        network_mode: "host"
+        network_mode: service:wireguard
  
     sonarr:
         image: linuxserver/sonarr:latest
@@ -75,7 +120,7 @@ services:
         depends_on:
             - prowlarr
             - qbittorrent
-        network_mode: "host"
+        network_mode: service:wireguard
  
  
     radarr:
@@ -94,7 +139,7 @@ services:
         depends_on:
             - prowlarr
             - qbittorrent
-        network_mode: "host"
+        network_mode: service:wireguard
  
  
     lidarr:
@@ -113,7 +158,7 @@ services:
         depends_on:
             - prowlarr
             - qbittorrent
-        network_mode: "host"
+        network_mode: service:wireguard
  
  
     readarr:
@@ -132,7 +177,7 @@ services:
         depends_on:
             - prowlarr
             - qbittorrent
-        network_mode: "host"
+        network_mode: service:wireguard
  
  
     lazy:
@@ -150,7 +195,7 @@ services:
         depends_on:
             - prowlarr
             - qbittorrent
-        network_mode: "host"
+        network_mode: service:wireguard
  
     bazarr:
         image: lscr.io/linuxserver/bazarr:latest
@@ -166,37 +211,8 @@ services:
         depends_on:
             - prowlarr
             - qbittorrent
-        network_mode: "host"
- 
- 
-    calibre:
-        image: lscr.io/linuxserver/calibre:latest
-        container_name: calibre
-        environment:
-            - PUID=1000
-            - PGID=1000
-            - TZ=Etc/UTC
-            - PASSWORD=huh844ew3yXv6T*JbssuV#Sv*
-        volumes:
-            - /data/dockerdata/calibre/config
-            - /data/dockerdata/calibre/library:/library
-        restart: unless-stopped
+        network_mode: service:wireguard
 
-    calibre-web:
-        image: lscr.io/linuxserver/calibre-web:latest
-        container_name: calibre-web
-        environment:
-            - PUID=1000
-            - PGID=1000
-            - TZ=Etc/UTC
-            - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
-        volumes:
-            - /data/dockerdata/calibre-web/config:/config
-            - /data/dockerdata/calibre/library:/books
-        restart: unless-stopped
- 
- 
- 
     jellyfin:
         image: jellyfin/jellyfin
         container_name: jellyfin
@@ -215,6 +231,7 @@ services:
         depends_on:
             - prowlarr
             - qbittorrent
+        network_mode: service:wireguard
  
     get_player:
         container_name: get_iplayer
@@ -229,5 +246,5 @@ services:
             - /etc/localtime:/etc/localtime:ro
             - /data/dockerdata/get_iplayer:/root/.get_iplayer:rw
             - /data/video/Downloads/iPlayer:/root/output:rw
-        network_mode: "host"
+        network_mode: service:wireguard
  
