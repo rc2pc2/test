@@ -26,95 +26,45 @@
 # 
 # Note that Sonarr and Radarr don't necessarily need the VPN if you're using Prowlarr for the indexers. 
 # But Prowlarr should be behind the VPN to avoid ISPs that block indexers.
-
-version: "2"
 services:
-    wireguard:
-        image: lscr.io/linuxserver/wireguard:latest
-        container_name: wireguard
-        cap_add:
-            - NET_ADMIN
-            - SYS_MODULE #optional
-        privileged: true
-        tty: true
-        environment:
-            - PUID=1000
-            - PGID=1000
-            - TZ=Etc/UTC
-            #- SERVERURL=wireguard.domain.com #optional
-            #- SERVERPORT=51820 #optional
-            #- PEERS=1 #optional
-            #- PEERDNS=auto #optional
-            #- INTERNAL_SUBNET=10.13.13.0 #optional
-            # - ALLOWEDIPS=0.0.0.0/0 #optional
-            #- PERSISTENTKEEPALIVE_PEERS= #optional
-            #- LOG_CONFS=true #optional
-        volumes:
-            - /home/devito/.config/wgi/:/config
-            #- /lib/modules:/lib/modules #optional
-        ports:
-            - 51820:51820/udp
-            # QBT UI Port
-            - 8090:8090
-            # Bittorrent port
-            - 6881:6881
-            - 6881:6881/udp
-            # Web port
-            - 8080:8080
-            - 9117:9117
-            # Sonarr port
-            - 8989:8989
-            # Radarr port
-            - 7878:7878
-            # Lidarr port
-            - 8686:8686
-            # Prowlarr port
-            - 9696:9696
-        sysctls:
-            - net.ipv4.conf.all.src_valid_mark=1
-        restart: unless-stopped
-
-
-
     qbittorrent:
         image: linuxserver/qbittorrent
         container_name: qbittorrent
         environment:
-            - PUID=1024
-            - PGID=101
+            - PUID=1000
+            - PGID=1000
             - TZ=Europe/London
             - UMASK_SET=022
             - WEBUI_PORT=8090
         volumes:
-            - /data/dockerdata/qbt/config:/config
+            - /data/dockerdata/qbt/config/qBittorrent:/config
             - /data/video/Seeding:/downloads
-            - /data/video/Downloads:/tvdownloads 
-            - /data/video/FilmDownloads:/filmdownloads 
+            - /data/video/Downloads:/tvdownloads
+            - /data/video/FilmDownloads:/filmdownloads
             - /data/video/MusicDownloads:/musicdownloads
-        network_mode: service:wireguard
         restart: unless-stopped
-
+        network_mode: "host"
+ 
     prowlarr:
         image: linuxserver/prowlarr:develop
         container_name: prowlarr
         environment:
-            - PUID=1024
-            - PGID=101
+            - PUID=1000
+            - PGID=1000
             - TZ=GB
         volumes:
             - /data/dockerdata/prowlarr:/config
         restart: unless-stopped
-        network_mode: service:wireguard
         depends_on:
-            - wireguard
             - qbittorrent
-            
+        network_mode: "host"
+ 
     sonarr:
         image: linuxserver/sonarr:latest
         container_name: sonarr_v3
         environment:
-            - PUID=1024
-            - PGID=101
+            - PUID=1000
+            - PGID=1000
             - TZ=GB
         volumes:
             - /etc/localtime:/etc/localtime:ro
@@ -122,17 +72,18 @@ services:
             - /data/video/TV:/tv
             - /data/video/Downloads:/downloads
         restart: unless-stopped
-        network_mode: service:wireguard
         depends_on:
             - prowlarr
             - qbittorrent
-
+        network_mode: "host"
+ 
+ 
     radarr:
         image: linuxserver/radarr:latest
         container_name: radarr_v3
         environment:
-            - PUID=1024
-            - PGID=101
+            - PUID=1000
+            - PGID=1000
             - TZ=GB
         volumes:
             - /etc/localtime:/etc/localtime:ro
@@ -140,17 +91,18 @@ services:
             - /data/video/Films:/movies
             - /data/video/FilmDownloads:/downloads
         restart: unless-stopped
-        network_mode: service:wireguard
         depends_on:
             - prowlarr
             - qbittorrent
-
+        network_mode: "host"
+ 
+ 
     lidarr:
         image: linuxserver/lidarr
         container_name: lidarr
         environment:
-            - PUID=1024
-            - PGID=101
+            - PUID=1000
+            - PGID=1000
             - TZ=GB
         volumes:
             - /etc/localtime:/etc/localtime:ro
@@ -158,27 +110,112 @@ services:
             - /data/music:/music
             - /data/video/MusicDownloads:/downloads
         restart: unless-stopped
-        network_mode: service:wireguard
         depends_on:
             - prowlarr
             - qbittorrent
-    plex:
-        container_name: plex
-        image: linuxserver/plex
-        devices:
-            - /dev/dri:/dev/dri
+        network_mode: "host"
+ 
+ 
+    readarr:
+        image: lscr.io/linuxserver/readarr:develop
+        container_name: readarr
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=GB
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /data/dockerdata/readarr/config:/config
+            - /data/books:/books
+            - /data/books/BookDownloads:/downloads
+        restart: unless-stopped
+        depends_on:
+            - prowlarr
+            - qbittorrent
+        network_mode: "host"
+ 
+ 
+    lazy:
+        image: lscr.io/linuxserver/lazylibrarian:latest
+        container_name: lazy
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - DOCKER_MODS=linuxserver/mods:universal-calibre|linuxserver/mods:lazylibrarian-ffmpeg #optional
+        volumes:
+            - /data/dockerdata/lazylib/config:/config
+            - /data/books:/books
+            - /data/books/BookDownloads:/downloads
+        restart: unless-stopped
+        depends_on:
+            - prowlarr
+            - qbittorrent
+        network_mode: "host"
+ 
+    bazarr:
+        image: lscr.io/linuxserver/bazarr:latest
+        container_name: bazarr
+        environment:
+            - PUID=1000
+            - PGID=1000
+        volumes:
+            - /data/dockerdata/bazarr/config:/config
+            - /data/video/TV:/tv
+            - /data/video/Films:/movies
+        restart: unless-stopped
+        depends_on:
+            - prowlarr
+            - qbittorrent
+        network_mode: "host"
+ 
+ 
+    calibre:
+        image: lscr.io/linuxserver/calibre:latest
+        container_name: calibre
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=Etc/UTC
+            - PASSWORD=huh844ew3yXv6T*JbssuV#Sv*
+        volumes:
+            - /data/dockerdata/calibre/config
+            - /data/dockerdata/calibre/library:/library
+        restart: unless-stopped
+
+    calibre-web:
+        image: lscr.io/linuxserver/calibre-web:latest
+        container_name: calibre-web
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=Etc/UTC
+            - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
+        volumes:
+            - /data/dockerdata/calibre-web/config:/config
+            - /data/dockerdata/calibre/library:/books
+        restart: unless-stopped
+ 
+ 
+ 
+    jellyfin:
+        image: jellyfin/jellyfin
+        container_name: jellyfin
+        #user: uid:gid
         privileged: true
         environment:
             PGID: '101'
             PUID: '1024'
-            VERSION: docker
         network_mode: host
-        restart: unless-stopped
         volumes:
-            - /data/dockerdata/plex:/config:rw
+            - /data/dockerdata/jellyfin:/config
             - /data/video/TV:/tv:rw
             - /data/video/Films:/movies:rw
-            - /data/music:/music:rw
+            - /data/video/music:/music:rw
+        restart: unless-stopped
+        depends_on:
+            - prowlarr
+            - qbittorrent
+ 
     get_player:
         container_name: get_iplayer
         image: kolonuk/get_iplayer
@@ -191,4 +228,6 @@ services:
         volumes:
             - /etc/localtime:/etc/localtime:ro
             - /data/dockerdata/get_iplayer:/root/.get_iplayer:rw
-            - /data/video/Downloads/iPlayer:/root/output:rw           
+            - /data/video/Downloads/iPlayer:/root/output:rw
+        network_mode: "host"
+ 
